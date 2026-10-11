@@ -4,11 +4,13 @@ import json
 import math
 import stat
 import zlib
+from datetime import date
 from pathlib import Path, PurePosixPath
+from struct import error as StructError
 from tempfile import TemporaryDirectory
 from zipfile import BadZipFile, ZipFile
 
-import fiona
+import shapefile
 from defusedxml import ElementTree as ET
 from defusedxml.common import DefusedXmlException
 from pyproj import CRS
@@ -184,6 +186,27 @@ def collect(features, crs, settings):
     return results
 
 
+def read_shapefile(source):
+    for feature in source.iterShapeRecords():
+        shape = feature.shape
+        geometry = None
+        if shape is not None and shape.shapeType != shapefile.NULL:
+            if shape.shapeType in {
+                shapefile.POINTZ,
+                shapefile.POLYLINEZ,
+                shapefile.POLYGONZ,
+                shapefile.MULTIPOINTZ,
+            }:
+                # PyShp's GeoJSON interface uses points, which otherwise contain XY only.
+                shape.points = shape.points_3D
+            geometry = shape.__geo_interface__
+        properties = {
+            key: value.isoformat() if isinstance(value, date) else value
+            for key, value in feature.record.as_dict().items()
+        }
+        yield str(feature.record.oid), geometry, properties
+
+
 def process(path: Path, extension: str, settings: Settings):
     try:
         if extension == ".kml":
@@ -192,19 +215,18 @@ def process(path: Path, extension: str, settings: Settings):
         else:
             with TemporaryDirectory(prefix="geo-shape-") as temporary:
                 shp = extract_shapefile(path, Path(temporary), settings)
-                with fiona.open(shp) as source:
-                    if not source.crs_wkt:
-                        raise FileError("Shapefile CRS is missing or unreadable.")
-                    crs = CRS.from_wkt(source.crs_wkt)
-                    features = (
-                        (
-                            str(feature.id),
-                            dict(feature.geometry) if feature.geometry else None,
-                            dict(feature.properties),
-                        )
-                        for feature in source
-                    )
-                    results = collect(features, crs, settings)
+                wkt = shp.with_suffix(".prj").read_text(encoding="utf-8-sig").strip()
+                if not wkt:
+                    raise FileError("Shapefile CRS is missing or unreadable.")
+                crs = CRS.from_wkt(wkt)
+                cpg = shp.with_suffix(".cpg")
+                encoding = cpg.read_text(encoding="utf-8-sig").strip() if cpg.exists() else "utf-8"
+                if encoding.isdigit():
+                    encoding = "utf-8" if encoding == "65001" else "cp" + encoding
+                with shapefile.Reader(shp, encoding=encoding) as source:
+                    if source.numRecords is None:
+                        raise FileError("Shapefile attributes are missing or unreadable.")
+                    results = collect(read_shapefile(source), crs, settings)
         # Check JSON representation before persisting any record.
         json.dumps(results, allow_nan=False)
         return crs.to_string(), results
@@ -214,7 +236,10 @@ def process(path: Path, extension: str, settings: Settings):
         BadZipFile,
         ET.ParseError,
         DefusedXmlException,
-        fiona.errors.FionaError,
+        shapefile.ShapefileException,
+        shapefile.GeoJSON_Error,
+        StructError,
+        LookupError,
         ValueError,
         TypeError,
         KeyError,

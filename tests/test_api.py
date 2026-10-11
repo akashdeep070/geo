@@ -1,4 +1,5 @@
 import io
+import json
 import math
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -37,7 +38,7 @@ def results(client, response):
     return client.get(f"/api/files/{response.json()['id']}/measurements/").json()["features"]
 
 
-def archive_dataset(tmp_path, geometry, crs="EPSG:4326", omit=()):
+def archive_dataset(tmp_path, geometry, crs="EPSG:4326", omit=(), schema_geometry=None):
     directory = tmp_path / "shape"
     directory.mkdir(exist_ok=True)
     path = directory / "survey.shp"
@@ -46,7 +47,7 @@ def archive_dataset(tmp_path, geometry, crs="EPSG:4326", omit=()):
         "w",
         driver="ESRI Shapefile",
         crs=crs,
-        schema={"geometry": geometry["type"], "properties": {"name": "str"}},
+        schema={"geometry": schema_geometry or geometry["type"], "properties": {"name": "str"}},
     ) as out:
         out.write({"geometry": geometry, "properties": {"name": "test survey"}})
     buffer = io.BytesIO()
@@ -153,6 +154,83 @@ def test_shapefile_missing_crs(client, tmp_path):
     response = client.post("/api/files/", files={"file": ("survey.zip", content)})
     assert response.status_code == 422
     assert ".prj" in response.json()["detail"]
+
+
+@pytest.mark.parametrize(
+    "geometry",
+    [
+        {"type": "Point", "coordinates": (77, 28, 100)},
+        {"type": "LineString", "coordinates": [(77, 28, 100), (77.01, 28, 500)]},
+    ],
+)
+def test_shapefile_z_is_retained_and_measurements_are_horizontal(client, tmp_path, geometry):
+    content = archive_dataset(tmp_path, geometry, schema_geometry="3D " + geometry["type"])
+    response = client.post("/api/files/", files={"file": ("survey.zip", content)})
+    feature = results(client, response)[0]
+    assert feature["geometry"]["coordinates"] == json.loads(json.dumps(geometry["coordinates"]))
+    if geometry["type"] == "LineString":
+        expected = Geod(ellps="WGS84").inv(77, 28, 77.01, 28)[2]
+        assert feature["measurement"]["value"] == pytest.approx(expected, rel=1e-5)
+
+
+@pytest.mark.parametrize("cpg", ["CP1252", "1252"])
+def test_shapefile_dbf_encoding_dates_and_null_geometry(client, tmp_path, cpg):
+    directory = tmp_path / "encoded"
+    directory.mkdir()
+    with fiona.open(
+        directory / "survey.shp",
+        "w",
+        driver="ESRI Shapefile",
+        crs="EPSG:4326",
+        encoding="CP1252",
+        schema={"geometry": "Point", "properties": {"name": "str", "survey_day": "date"}},
+    ) as source:
+        source.write({"geometry": None, "properties": {"name": "Café", "survey_day": "2026-10-11"}})
+    (directory / "survey.cpg").write_text(cpg)
+    buffer = io.BytesIO()
+    with ZipFile(buffer, "w", ZIP_DEFLATED) as archive:
+        for component in directory.iterdir():
+            archive.write(component, component.name)
+    response = client.post("/api/files/", files={"file": ("survey.zip", buffer.getvalue())})
+    feature = results(client, response)[0]
+    assert feature["geometry"] is None
+    assert feature["status"] == "EMPTY"
+    assert feature["properties"] == {"name": "Café", "survey_day": "2026-10-11"}
+
+
+def test_shapefile_polygon_hole_is_preserved(client, tmp_path):
+    from shapely.geometry import shape
+
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [
+            [(77, 28), (77.01, 28), (77.01, 28.01), (77, 28.01), (77, 28)],
+            [
+                (77.002, 28.002),
+                (77.002, 28.008),
+                (77.008, 28.008),
+                (77.008, 28.002),
+                (77.002, 28.002),
+            ],
+        ],
+    }
+    content = archive_dataset(tmp_path, geometry)
+    response = client.post("/api/files/", files={"file": ("survey.zip", content)})
+    feature = results(client, response)[0]
+    assert len(feature["geometry"]["coordinates"]) == 2
+    expected = abs(Geod(ellps="WGS84").geometry_area_perimeter(shape(geometry))[0])
+    assert feature["measurement"]["value"] == pytest.approx(expected, rel=1e-4)
+
+
+def test_shapefile_truncated_binary_is_rejected(client, tmp_path):
+    valid = archive_dataset(tmp_path, {"type": "Point", "coordinates": (77, 28)})
+    buffer = io.BytesIO()
+    with ZipFile(io.BytesIO(valid)) as source, ZipFile(buffer, "w") as output:
+        for name in source.namelist():
+            content = source.read(name)
+            output.writestr(name, content[:10] if name.endswith(".shp") else content)
+    response = client.post("/api/files/", files={"file": ("broken.zip", buffer.getvalue())})
+    assert response.status_code == 422
 
 
 @pytest.mark.parametrize(

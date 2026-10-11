@@ -4,7 +4,7 @@ Upload a KML file or zipped Shapefile, calculate polygon areas and line lengths,
 
 **Deploy the frontend and API together on Vercel without a database, PostgreSQL account, or SQL setup.** The API processes each upload and returns the complete result to your browser. The latest result can survive a refresh in the same tab; download the JSON to keep a copy.
 
-Built with **FastAPI · Fiona · Shapely · pyproj · JavaScript · Leaflet**. No Node.js server or separate frontend build is needed to run the app.
+Built with **FastAPI · PyShp · Shapely · pyproj · JavaScript · Leaflet**. No Node.js server or separate frontend build is needed to run the app.
 
 ## What you can do
 
@@ -90,7 +90,7 @@ Open `http://127.0.0.1:8000` in your local browser. This runs the same processin
 
 Without `GEO_STORAGE_MODE=none`, ordinary local development defaults to SQLite in `./data` when no database URL is set. Existing local saved results remain available in that mode.
 
-Fiona, Shapely, and pyproj use native libraries. Their locked wheels include the required libraries on supported platforms; systems without compatible wheels require GDAL, GEOS, and PROJ build dependencies.
+Shapefile uploads use PyShp, a pure Python reader, so the production app does not require Fiona or GDAL. Shapely and pyproj use native GEOS and PROJ libraries included in their locked wheels on supported platforms. Fiona is a development dependency used only to generate independent Shapefile test fixtures.
 
 ## Using the interface
 
@@ -209,9 +209,9 @@ uv run --locked ruff format --check .
 uv run --locked python scripts/build_frontend.py --check
 ```
 
-Tests cover independent metric references, projected metre/foot CRSs, polygon holes, multipart geometries, archive safety, invalid files, limits, stateless processing, and SQLite persistence. The optional PostgreSQL integration test is skipped unless `GEO_TEST_DATABASE_URL` points to a disposable test database. CI supplies one; local testing does not require it.
+Tests cover independent metric references, projected metre/foot CRSs, polygon holes, multipart geometries, Shapefile altitude preservation, DBF dates and character encodings, archive safety, invalid files, limits, stateless processing, and SQLite persistence. The optional PostgreSQL integration test is skipped unless `GEO_TEST_DATABASE_URL` points to a disposable test database. CI supplies one; local testing does not require it.
 
-Deployment preparation was validated with Vercel's `@vercel/python` builder 24.0.1. It produced a Python 3.12 function with the frontend and sample included, and the browser checks passed against the extracted production function using only its bundled dependencies. This validates packaging and app behavior locally; the first hosted preview must still be deployed through your Vercel account.
+Deployment preparation was validated with Vercel's `@vercel/python` builder 24.0.1. It produced a Python 3.12 function with the frontend and sample included. The extracted function's Vercel handler also passed startup, frontend, KML, and projected Shapefile checks in the official Amazon Lambda Python 3.12 image with a read-only filesystem and only its bundled dependencies. Fiona/GDAL is excluded from that bundle, avoiding the missing `libexpat.so.1` startup failure. Browser checks cover the app's stateless deployment flow. A hosted preview still requires deployment through your Vercel account.
 
 For browser checks:
 
@@ -265,5 +265,6 @@ uv.lock               Locked dependency versions
 | Result is missing in another tab/browser | Results belong to the original tab; share JSON or enable persistence                             |
 | Street tiles are blank                   | Disable Street basemap; feature outlines work independently                                      |
 | Vercel build fails installing libraries  | Confirm Python 3.12, the complete lockfile, the correct root, and default FastAPI build settings |
+| `ImportError: libexpat.so.1` from Fiona   | Redeploy the latest commit. Production now uses PyShp and excludes Fiona/GDAL; redeploy without the build cache if the old dependency remains |
 
 This is a test/demo application with synchronous processing. Production use would need authentication, access controls, rate limiting, retention policies, and appropriate processing resource limits.
