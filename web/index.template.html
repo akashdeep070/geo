@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#153d31" />
+    <title>GeoMeasure — Your data, in perspective</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="vendor/leaflet/leaflet.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <noscript>
+      <div class="feedback error">
+        This preview does not run JavaScript. Open GeoMeasure in a browser with
+        JavaScript enabled to upload files and use the map.
+      </div>
+    </noscript>
+    <svg
+      class="icon-library"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <symbol id="i-layers" viewBox="0 0 24 24">
+        <path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5" />
+      </symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24">
+        <path
+          d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"
+        />
+      </symbol>
+      <symbol id="i-file" viewBox="0 0 24 24">
+        <path d="M14 3H5v18h14V8l-5-5Zm0 0v5h5M8 13h8m-8 4h5" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M5 12h14m-6-6 6 6-6 6" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="10.5" cy="10.5" r="6.5" />
+        <path d="m16 16 5 5" />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 3v13m-5-5 5 5 5-5M4 16v5h16v-5" />
+      </symbol>
+      <symbol id="i-map" viewBox="0 0 24 24">
+        <path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5Zm6-2v16m6-14v16" />
+      </symbol>
+      <symbol id="i-area" viewBox="0 0 24 24">
+        <path d="M4 9V4h5m6 0h5v5m0 6v5h-5M9 20H4v-5M8 8h8v8H8z" />
+      </symbol>
+      <symbol id="i-line" viewBox="0 0 24 24">
+        <path d="m5 18 5-7 5 3 4-9" />
+        <circle cx="5" cy="18" r="2" />
+        <circle cx="19" cy="5" r="2" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="m5 12 4 4L19 6" />
+      </symbol>
+    </svg>
+    <aside class="sidebar">
+      <a id="brand-home" class="brand" href="./" aria-label="GeoMeasure home"
+        ><span class="brand-mark"
+          ><svg><use href="#i-layers" /></svg></span
+        >GeoMeasure<span class="brand-dot">.</span></a
+      >
+      <div class="workspace-label">YOUR WORKSPACE</div>
+      <a class="nav-item active" href="#workspace"
+        ><svg><use href="#i-map" /></svg>File explorer<span
+          class="nav-indicator"
+        ></span
+      ></a>
+      <a
+        id="api-docs-link"
+        class="nav-item"
+        href="docs"
+        target="_blank"
+        rel="noopener"
+        ><svg><use href="#i-file" /></svg>API documentation<span
+          class="external"
+          >↗</span
+        ></a
+      >
+      <div class="recent-heading">
+        <span>RECENT FILES</span><span id="recent-count">0</span>
+      </div>
+      <div id="recent-files" class="recent-files">
+        <p class="recent-empty">Your recent uploads will<br />appear here.</p>
+      </div>
+      <div class="sidebar-note">
+        <span class="note-symbol">✳</span>
+        <h3>A little more clarity.</h3>
+        <p>Turn geospatial files into measurements you can understand.</p>
+        <button id="sidebar-demo" class="text-button">
+          Explore a sample <span>↗</span>
+        </button>
+      </div>
+      <div class="sidebar-footer">
+        <span class="status-dot"></span>Local workspace<span class="version"
+          >v0.1</span
+        >
+      </div>
+    </aside>
+    <main id="workspace">
+      <header class="topbar">
+        <span class="breadcrumb"
+          >Workspace <span>/</span> <strong>File explorer</strong></span
+        ><span class="topbar-note"
+          ><span class="status-dot"></span>Made for a closer look</span
+        >
+      </header>
+      <div class="content">
+        <section class="intro">
+          <div>
+            <div class="eyebrow"><span></span> GEOSPATIAL FILE EXPLORER</div>
+            <h1>Your data, in perspective<span>.</span></h1>
+            <p>
+              Upload a file. Explore its features. Make every measurement count.
+            </p>
+          </div>
+          <button id="demo-button" class="button secondary">
+            <svg><use href="#i-layers" /></svg>Try a sample<svg
+              class="arrow-icon"
+            >
+              <use href="#i-arrow" />
+            </svg>
+          </button>
+        </section>
+        <section
+          class="upload-card"
+          id="drop-zone"
+          aria-label="Upload geospatial file"
+        >
+          <div class="upload-art">
+            <svg><use href="#i-upload" /></svg>
+          </div>
+          <div class="upload-copy">
+            <h2 id="upload-heading">Bring your map to life</h2>
+            <p id="upload-description">
+              Drop your file here, or choose one to get started.
+            </p>
+            <div class="file-tags">
+              <span>.KML</span><span>.ZIP SHAPEFILE</span
+              ><span id="upload-limit" class="limit-note">Up to 20 MiB</span>
+            </div>
+          </div>
+          <input id="file-input" type="file" accept=".kml,.zip" hidden />
+          <button id="browse-button" class="button primary">
+            <svg><use href="#i-upload" /></svg><span>Choose a file</span>
+          </button>
+        </section>
+        <div
+          id="feedback"
+          class="feedback"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+        <section class="stats" aria-label="File summary">
+          <article class="stat-card">
+            <div class="stat-heading">
+              Total features<svg><use href="#i-layers" /></svg>
+            </div>
+            <div class="stat-value" id="feature-count">—</div>
+            <div class="stat-caption" id="feature-caption">
+              Waiting for your first file
+            </div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-heading">
+              Polygon area<svg><use href="#i-area" /></svg>
+            </div>
+            <div class="stat-value">
+              <span id="area-total">—</span
+              ><span class="stat-unit" id="area-unit">m²</span>
+            </div>
+            <div class="stat-caption" id="area-caption">
+              Combined measured area
+            </div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-heading">
+              Line length<svg><use href="#i-line" /></svg>
+            </div>
+            <div class="stat-value">
+              <span id="length-total">—</span
+              ><span class="stat-unit" id="length-unit">m</span>
+            </div>
+            <div class="stat-caption" id="length-caption">
+              Combined measured length
+            </div>
+          </article>
+          <article class="stat-card crs-card">
+            <div class="stat-heading">
+              Source coordinates<svg><use href="#i-map" /></svg>
+            </div>
+            <div class="stat-value crs-value" id="source-crs">—</div>
+            <div class="stat-caption" id="crs-caption">
+              Read directly from your file
+            </div>
+          </article>
+        </section>
+        <section class="explorer-grid">
+          <article class="panel map-panel">
+            <div class="panel-heading">
+              <div>
+                <h2>
+                  Map overview
+                  <span class="small-badge" id="map-count">0 features</span>
+                </h2>
+                <p id="map-subtitle">A new point of view on your file.</p>
+              </div>
+              <button id="fit-map" class="button small" disabled>
+                Fit to features
+              </button>
+            </div>
+            <div class="map-wrapper">
+              <div id="map" aria-label="Interactive feature map"></div>
+              <div class="map-empty" id="map-empty">
+                <span class="empty-map-icon"
+                  ><svg><use href="#i-map" /></svg
+                ></span>
+                <h3>A place for your data</h3>
+                <p>Upload a file to see its features on the map.</p>
+                <button id="map-demo" class="text-button">
+                  Or explore our sample <span>→</span>
+                </button>
+              </div>
+              <div class="map-toolbar">
+                <label
+                  ><input id="street-map" type="checkbox" /> Street
+                  basemap</label
+                >
+              </div>
+              <div class="map-coordinate" id="map-coordinate">
+                28.0000° N &nbsp; 77.0000° E
+              </div>
+            </div>
+            <div class="map-legend">
+              <span><i class="legend-polygon"></i>Polygon</span
+              ><span><i class="legend-line"></i>Line</span
+              ><span><i class="legend-point"></i>Point</span
+              ><span class="legend-hint">Click a feature to inspect</span>
+            </div>
+          </article>
+          <article class="panel detail-panel">
+            <div class="panel-heading">
+              <div>
+                <div class="eyebrow">THE DETAILS</div>
+                <h2>Feature inspector</h2>
+              </div>
+              <svg><use href="#i-file" /></svg>
+            </div>
+            <div id="inspector">
+              <div class="inspector-empty">
+                <span class="inspector-empty-icon"
+                  ><svg><use href="#i-search" /></svg
+                ></span>
+                <h3>Meet your features</h3>
+                <p>
+                  Select a feature on the map or in the table to see its
+                  geometry, attributes, and measurements.
+                </p>
+              </div>
+            </div>
+          </article>
+        </section>
+        <section class="panel results-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>
+                Feature measurements
+                <span class="small-badge" id="result-count">0</span>
+              </h2>
+              <p id="file-description">All the details, in one place.</p>
+            </div>
+            <button id="download-button" class="button small" disabled>
+              <svg><use href="#i-download" /></svg>Export JSON
+            </button>
+          </div>
+          <div class="table-controls">
+            <label class="search-field"
+              ><svg><use href="#i-search" /></svg
+              ><input
+                id="feature-search"
+                type="search"
+                placeholder="Search names, IDs, or attributes…"
+                aria-label="Search features" /></label
+            ><label class="filter-label"
+              >Geometry<select
+                id="geometry-filter"
+                aria-label="Filter geometry"
+              >
+                <option value="all">All geometries</option>
+                <option value="polygon">Polygons</option>
+                <option value="line">Lines</option>
+                <option value="point">Points</option>
+                <option value="other">Other</option>
+              </select></label
+            >
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>FEATURE</th>
+                  <th>GEOMETRY</th>
+                  <th>MEASUREMENT</th>
+                  <th>STATUS</th>
+                  <th><span class="sr-only">Inspect feature</span></th>
+                </tr>
+              </thead>
+              <tbody id="feature-rows"></tbody>
+            </table>
+          </div>
+          <div class="table-empty" id="table-empty">
+            <svg><use href="#i-layers" /></svg>
+            <h3>Every feature has a story</h3>
+            <p>Your measurements will appear here after you upload a file.</p>
+          </div>
+          <div class="table-footer">
+            <span id="table-summary">No file selected</span>
+            <div class="pagination">
+              <button id="previous-page" aria-label="Previous page" disabled>
+                ←</button
+              ><span id="page-indicator">0 / 0</span
+              ><button id="next-page" aria-label="Next page" disabled>→</button>
+            </div>
+          </div>
+        </section>
+        <footer class="page-footer">
+          <span
+            ><svg><use href="#i-check" /></svg>Measurements in metres.
+            Coordinates handled with care.</span
+          ><span
+            >Built for curious explorers
+            <span class="footer-star">✳</span></span
+          >
+        </footer>
+      </div>
+    </main>
+  </body>
+</html>

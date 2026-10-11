@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "fastapi",
+  "buildCommand": "python scripts/build_frontend.py --check",
+  "env": {
+    "GEO_STORAGE_MODE": "none"
+  },
+  "functions": {
+    "app/main.py": {
+      "maxDuration": 60,
+      "includeFiles": "{web/**,examples/**}"
+    }
+  }
+}

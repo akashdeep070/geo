@@ -1,0 +1,16 @@
+.git
+.vercel
+.github
+.venv
+.pytest_cache
+.ruff_cache
+__pycache__
+**/__pycache__
+*.pyc
+data
+.env
+.env.*
+tests
+artifacts
+dist
+scripts/browser_smoke.py
