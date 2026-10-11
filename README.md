@@ -2,6 +2,10 @@
 
 Upload a KML file or zipped Shapefile, calculate polygon areas and line lengths, and explore the results on an interactive map.
 
+[**Try the live demo →**](https://geo-spatial-api.vercel.app/)
+
+![GeoMeasure interface showing a sample KML file, feature counts, polygon area, line length, and an interactive map](docs/images/geomeasure-demo.png)
+
 **Deploy the frontend and API together on Vercel without a database, PostgreSQL account, or SQL setup.** The API processes each upload and returns the complete result to your browser. The latest result can survive a refresh in the same tab; download the JSON to keep a copy.
 
 Built with **FastAPI · PyShp · Shapely · pyproj · JavaScript · Leaflet**. No Node.js server or separate frontend build is needed to run the app.

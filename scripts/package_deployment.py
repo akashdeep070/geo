@@ -17,7 +17,7 @@ ROOT_FILES = (
     ".vercelignore",
     ".gitignore",
 )
-SOURCE_DIRECTORIES = ("app", "web", "examples", "scripts", "tests", ".github")
+SOURCE_DIRECTORIES = ("app", "web", "examples", "scripts", "tests", "docs", ".github")
 IGNORED_PARTS = {"__pycache__", ".pytest_cache", ".ruff_cache", ".venv", ".vercel", ".git"}
 
 
