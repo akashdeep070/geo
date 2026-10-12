@@ -172,8 +172,9 @@ def run_checks(url, directory):
         expect(page.locator("h1")).to_have_text("Measure your geospatial files.")
         expect(page.locator("#map-empty")).to_be_visible()
         expect(page.locator("#street-map")).to_be_checked()
-        assert page.evaluate("map.hasLayer(street)")
-        expect(page.locator(".leaflet-control-attribution")).to_contain_text("OpenStreetMap")
+        assert page.evaluate("map.hasLayer(satellite) && !map.hasLayer(street)")
+        expect(page.locator("#satellite-view")).to_have_attribute("aria-pressed", "true")
+        expect(page.locator(".leaflet-control-attribution")).to_contain_text("Esri")
         limit = 3 if os.getenv("VERCEL") == "1" else 20
         expect(page.locator("#upload-limit")).to_have_text(f"Up to {limit} MiB")
         if limit == 3:
@@ -310,7 +311,8 @@ def run_checks(url, directory):
         center = page.evaluate("({lat: map.getCenter().lat, lng: map.getCenter().lng})")
         assert abs(center["lng"] - 75) < 0.01 and 27 < center["lat"] < 29
 
-        # A failed default basemap must not break feature rendering or upload feedback.
+        # A failed street basemap must not break feature rendering or upload feedback.
+        page.click("#street-view")
         page.locator("#street-map").uncheck()
         page.route("https://tile.openstreetmap.org/**", lambda route: route.abort())
         page.locator("#street-map").check()

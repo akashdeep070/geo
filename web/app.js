@@ -463,7 +463,7 @@ const satellite = L.tileLayer(
   },
 );
 const basemaps = { street, satellite };
-let basemapKind = "street";
+let basemapKind = "satellite";
 let tileErrorShown = false;
 for (const [kind, layer] of Object.entries(basemaps)) {
   layer.on("tileerror", () => {
@@ -476,7 +476,7 @@ for (const [kind, layer] of Object.entries(basemaps)) {
     }
   });
 }
-if ($("street-map").checked) street.addTo(map);
+if ($("street-map").checked) basemaps[basemapKind].addTo(map);
 let featureGroup = L.featureGroup().addTo(map);
 function layerStyle(feature, selected = false) {
   const imagery = basemapKind === "satellite" && $("street-map").checked;

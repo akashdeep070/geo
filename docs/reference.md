@@ -83,7 +83,7 @@ Shapefile uploads use PyShp, a pure Python reader, so the production app does no
 4. Use search and the geometry filter to narrow the table.
 5. Click the JSON download button to save your results.
 
-The **Street** basemap opens by default using OpenStreetMap. **Satellite** displays Esri World Imagery, with brighter feature outlines for visibility. Switching views preserves map position and feature selection. Both providers receive tile requests for the visible map bounds; their attribution appears on the map. Turn off **Basemap** to use feature outlines alone. If tiles cannot load, a message appears below the map; measurements and feature inspection still work. Upload processing requires the running API.
+The **Satellite** basemap opens by default using Esri World Imagery, with brighter feature outlines for visibility. Switch to **Street** for OpenStreetMap. Switching views preserves map position and feature selection. Both providers receive tile requests for the visible map bounds; their attribution appears on the map. Turn off **Basemap** to use feature outlines alone. If tiles cannot load, a message appears below the map; measurements and feature inspection still work. Upload processing requires the running API.
 
 Opening `web/index.html` as a static file loads the interface, styling, and map scripts, but does not start the API. Use the Vercel address or the local app server for uploads.
 
