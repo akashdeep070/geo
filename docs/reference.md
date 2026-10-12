@@ -83,7 +83,7 @@ Shapefile uploads use PyShp, a pure Python reader, so the production app does no
 4. Use search and the geometry filter to narrow the table.
 5. Click the JSON download button to save your results.
 
-The **OpenStreetMap** basemap is enabled by default and displays streets and place names beneath uploaded features. It requests tiles from OpenStreetMap and shares the visible map bounds with that provider. Turn off the checkbox to use feature outlines alone. If tiles cannot load, a message appears below the map; measurements and feature inspection still work. Upload processing requires the running API.
+The **Street** basemap opens by default using OpenStreetMap. **Satellite** displays Esri World Imagery, with brighter feature outlines for visibility. Switching views preserves map position and feature selection. Both providers receive tile requests for the visible map bounds; their attribution appears on the map. Turn off **Basemap** to use feature outlines alone. If tiles cannot load, a message appears below the map; measurements and feature inspection still work. Upload processing requires the running API.
 
 Opening `web/index.html` as a static file loads the interface, styling, and map scripts, but does not start the API. Use the Vercel address or the local app server for uploads.
 
@@ -246,7 +246,7 @@ uv.lock               Locked dependency versions
 | Upload gets HTTP 413                     | Check the 3 MiB hosted upload limit; expanded results also have a 4 MiB limit                    |
 | Result disappears after refresh          | Browser storage may be blocked or full; download JSON before refreshing                          |
 | Result is missing in another tab/browser | Results belong to the original tab; share JSON or enable persistence                             |
-| Street tiles are blank                   | Check your connection or turn off OpenStreetMap; feature outlines work independently              |
+| Basemap tiles are blank                  | Check your connection, switch Street/Satellite, or turn off Basemap; feature outlines work independently |
 | Vercel build fails installing libraries  | Confirm Python 3.12, the complete lockfile, the correct root, and default FastAPI build settings |
 | `ImportError: libexpat.so.1` from Fiona   | Redeploy the latest commit. Production now uses PyShp and excludes Fiona/GDAL; redeploy without the build cache if the old dependency remains |
 

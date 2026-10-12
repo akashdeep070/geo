@@ -126,7 +126,7 @@ function busy(value, message = "Reading your file…") {
   $("browse-button").querySelector("span").textContent = value
     ? "Processing…"
     : "Choose a file";
-  $("upload-heading").textContent = value ? message : "Bring your map to life";
+  $("upload-heading").textContent = value ? message : "Upload your geospatial file";
   $("upload-description").textContent = value
     ? "We’re checking your geometry and calculating measurements."
     : "Drop your file here, or choose one to get started.";
@@ -454,29 +454,51 @@ const street = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 });
+const satellite = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  {
+    maxZoom: 19,
+    attribution:
+      'Imagery &copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics, and the GIS User Community',
+  },
+);
+const basemaps = { street, satellite };
+let basemapKind = "street";
 let tileErrorShown = false;
-street.on("tileerror", () => {
-  if (!tileErrorShown) {
-    tileErrorShown = true;
-    $("map-status").textContent =
-      "OpenStreetMap tiles could not load. Your feature outlines still work. Check your connection or turn off the basemap.";
-    $("map-status").hidden = false;
-  }
-});
+for (const [kind, layer] of Object.entries(basemaps)) {
+  layer.on("tileerror", () => {
+    if (kind === basemapKind && map.hasLayer(layer) && !tileErrorShown) {
+      tileErrorShown = true;
+      const name = kind === "street" ? "OpenStreetMap" : "Satellite";
+      $("map-status").textContent =
+        `${name} tiles could not load. Your feature outlines still work. Check your connection or switch the basemap.`;
+      $("map-status").hidden = false;
+    }
+  });
+}
 if ($("street-map").checked) street.addTo(map);
 let featureGroup = L.featureGroup().addTo(map);
 function layerStyle(feature, selected = false) {
-  const color = selected
-    ? "#c77642"
-    : kindOf(feature) === "line"
-      ? "#c99159"
-      : kindOf(feature) === "point"
-        ? "#447f80"
-        : "#64894a";
+  const imagery = basemapKind === "satellite" && $("street-map").checked;
+  const color = imagery
+    ? selected
+      ? "#ffffff"
+      : kindOf(feature) === "line"
+        ? "#ff7b45"
+        : kindOf(feature) === "point"
+          ? "#6fe4ec"
+          : "#ffd479"
+    : selected
+      ? "#c77642"
+      : kindOf(feature) === "line"
+        ? "#c99159"
+        : kindOf(feature) === "point"
+          ? "#447f80"
+          : "#64894a";
   return {
     color,
     fillColor: selected ? "#e9b38a" : color,
-    weight: selected ? 4 : 2,
+    weight: selected ? 4 : imagery ? 3 : 2,
     fillOpacity: selected ? 0.3 : 0.17,
     radius: selected ? 7 : 5,
   };
@@ -637,13 +659,24 @@ $("next-page").addEventListener("click", () => {
   }
 });
 $("fit-map").addEventListener("click", fitMap);
-$("street-map").addEventListener("change", (event) => {
+function updateBasemap() {
   $("map-status").hidden = true;
-  if (event.target.checked) {
-    tileErrorShown = false;
-    street.addTo(map);
-  } else map.removeLayer(street);
-});
+  tileErrorShown = false;
+  for (const [kind, layer] of Object.entries(basemaps)) {
+    if (kind !== basemapKind || !$("street-map").checked) map.removeLayer(layer);
+    $(`${kind}-view`).setAttribute("aria-pressed", String(kind === basemapKind));
+  }
+  if ($("street-map").checked) basemaps[basemapKind].addTo(map);
+  for (const [index, layer] of layers)
+    layer.setStyle(layerStyle(state.features[index], index === state.selected));
+}
+$("street-map").addEventListener("change", updateBasemap);
+for (const kind of Object.keys(basemaps))
+  $(`${kind}-view`).addEventListener("click", () => {
+    basemapKind = kind;
+    $("street-map").checked = true;
+    updateBasemap();
+  });
 map.on("moveend", () => {
   const center = map.getCenter();
   $("map-coordinate").textContent =

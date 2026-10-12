@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#153d31" />
-    <title>GeoMeasure — Your data, in perspective</title>
+    <meta name="theme-color" content="#faf7f2" />
+    <title>GeoMeasure — Measure your geospatial files</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
     <link rel="stylesheet" href="styles.css" />
@@ -89,15 +89,15 @@
         <p class="recent-empty">Your recent uploads will<br />appear here.</p>
       </div>
       <div class="sidebar-note">
-        <span class="note-symbol">✳</span>
-        <h3>A little more clarity.</h3>
-        <p>Turn geospatial files into measurements you can understand.</p>
+        <span class="note-symbol"><svg><use href="#i-map" /></svg></span>
+        <h3>Start with a sample.</h3>
+        <p>One polygon, one route, and a point. See how the measurements work.</p>
         <button id="sidebar-demo" class="text-button">
           Explore a sample <span>↗</span>
         </button>
       </div>
       <div class="sidebar-footer">
-        <span class="status-dot"></span>Local workspace<span class="version"
+        <span class="status-dot"></span>File workspace<span class="version"
           >v0.1</span
         >
       </div>
@@ -107,16 +107,16 @@
         <span class="breadcrumb"
           >Workspace <span>/</span> <strong>File explorer</strong></span
         ><span class="topbar-note"
-          ><span class="status-dot"></span>Made for a closer look</span
+          ><span class="status-dot"></span>KML &amp; Shapefile</span
         >
       </header>
       <div class="content">
         <section class="intro">
           <div>
             <div class="eyebrow"><span></span> GEOSPATIAL FILE EXPLORER</div>
-            <h1>Your data, in perspective<span>.</span></h1>
+            <h1>Measure your geospatial files<span>.</span></h1>
             <p>
-              Upload a file. Explore its features. Make every measurement count.
+              Explore your data on real maps. Calculate areas and lengths in metres.
             </p>
           </div>
           <button id="demo-button" class="button secondary">
@@ -136,7 +136,7 @@
             <svg><use href="#i-upload" /></svg>
           </div>
           <div class="upload-copy">
-            <h2 id="upload-heading">Bring your map to life</h2>
+            <h2 id="upload-heading">Upload your geospatial file</h2>
             <p id="upload-description">
               Drop your file here, or choose one to get started.
             </p>
@@ -230,8 +230,12 @@
               <div class="map-toolbar">
                 <label
                   ><input id="street-map" type="checkbox" checked />
-                  OpenStreetMap</label
+                  Basemap</label
                 >
+                <div class="basemap-switch" role="group" aria-label="Map style">
+                  <button id="street-view" type="button" aria-pressed="true">Street</button>
+                  <button id="satellite-view" type="button" aria-pressed="false">Satellite</button>
+                </div>
               </div>
               <div class="map-coordinate" id="map-coordinate">
                 28.0000° N &nbsp; 77.0000° E

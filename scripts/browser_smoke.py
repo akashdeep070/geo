@@ -66,7 +66,7 @@ def run_loading_checks(browser, url):
             page.evaluate(
                 "getComputedStyle(document.documentElement).getPropertyValue('--green').trim()"
             )
-            == "#173f33"
+            == "#20201e"
         )
         page.click("#demo-button")
         expect(page.locator("#feature-count")).to_have_text("3", timeout=20000)
@@ -82,7 +82,7 @@ def run_loading_checks(browser, url):
         page.evaluate(
             "getComputedStyle(document.documentElement).getPropertyValue('--green').trim()"
         )
-        == "#173f33"
+        == "#20201e"
     )
     expect(page.locator("#feedback")).to_contain_text("open this page through the running")
     context.close()
@@ -128,7 +128,7 @@ def run_loading_checks(browser, url):
             page.evaluate(
                 "getComputedStyle(document.documentElement).getPropertyValue('--green').trim()"
             )
-            == "#173f33"
+            == "#20201e"
         )
         expect(page.locator("#feedback")).to_contain_text("file processing is unavailable")
     finally:
@@ -169,7 +169,7 @@ def run_checks(url, directory):
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(url, wait_until="networkidle")
-        expect(page.locator("h1")).to_have_text("Your data, in perspective.")
+        expect(page.locator("h1")).to_have_text("Measure your geospatial files.")
         expect(page.locator("#map-empty")).to_be_visible()
         expect(page.locator("#street-map")).to_be_checked()
         assert page.evaluate("map.hasLayer(street)")
@@ -319,6 +319,22 @@ def run_checks(url, directory):
         expect(page.locator("#map path.leaflet-interactive")).to_have_count(1)
         page.locator("#street-map").uncheck()
         expect(page.locator("#map-status")).to_be_hidden()
+        page.route("https://server.arcgisonline.com/**", lambda route: route.abort())
+        view = page.evaluate("({center: map.getCenter(), zoom: map.getZoom()})")
+        page.click("#satellite-view")
+        expect(page.locator("#street-map")).to_be_checked()
+        expect(page.locator("#satellite-view")).to_have_attribute("aria-pressed", "true")
+        assert page.evaluate("map.hasLayer(satellite) && !map.hasLayer(street)")
+        expect(page.locator(".leaflet-control-attribution")).to_contain_text("Esri")
+        expect(page.locator("#map-status")).to_contain_text("Satellite tiles could not load")
+        assert page.evaluate("({center: map.getCenter(), zoom: map.getZoom()})") == view
+        expect(page.locator("#map path.leaflet-interactive")).to_have_count(1)
+        assert page.locator("#map path.leaflet-interactive").get_attribute("stroke") == "#6fe4ec"
+        page.click("#street-view")
+        assert page.evaluate("map.hasLayer(street) && !map.hasLayer(satellite)")
+        expect(page.locator("#street-view")).to_have_attribute("aria-pressed", "true")
+        expect(page.locator("#satellite-view")).to_have_attribute("aria-pressed", "false")
+        expect(page.locator("#feedback")).to_contain_text("projected.zip is ready")
         assert not errors, errors
         if stateless:
             assert not database_requests, database_requests

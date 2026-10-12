@@ -6,9 +6,11 @@ Area and length measurements for KML files and Shapefiles, with a map to inspect
 
 [![GeoMeasure with the sample KML loaded](docs/images/geomeasure-demo.png)](https://geo-spatial-api.vercel.app/)
 
+*Sample KML in the feature-only view. The app opens with the street basemap enabled.*
+
 Upload a file or try the included sample. The app shows each feature's geometry, attributes, source CRS, and measurement. Select a feature on the map or in the table, filter the results, and download them as JSON.
 
-OpenStreetMap provides streets and place names beneath your features by default. You can turn it off to view the outlines alone; basemap tiles need an internet connection.
+The street map opens by default using OpenStreetMap. Switch to **Satellite** for Esri imagery, or turn off **Basemap** to view the outlines alone. Both basemaps need an internet connection.
 
 Built with Python, FastAPI, PyShp, Shapely, pyproj, and Leaflet. The frontend is plain HTML, CSS, and JavaScript.
 
