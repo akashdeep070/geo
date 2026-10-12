@@ -458,11 +458,12 @@ let tileErrorShown = false;
 street.on("tileerror", () => {
   if (!tileErrorShown) {
     tileErrorShown = true;
-    feedback(
-      "The street basemap is unavailable. Your feature outlines still work without it.",
-    );
+    $("map-status").textContent =
+      "OpenStreetMap tiles could not load. Your feature outlines still work. Check your connection or turn off the basemap.";
+    $("map-status").hidden = false;
   }
 });
+if ($("street-map").checked) street.addTo(map);
 let featureGroup = L.featureGroup().addTo(map);
 function layerStyle(feature, selected = false) {
   const color = selected
@@ -637,6 +638,7 @@ $("next-page").addEventListener("click", () => {
 });
 $("fit-map").addEventListener("click", fitMap);
 $("street-map").addEventListener("change", (event) => {
+  $("map-status").hidden = true;
   if (event.target.checked) {
     tileErrorShown = false;
     street.addTo(map);

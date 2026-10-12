@@ -1327,6 +1327,15 @@ h1 > span {
   margin: 0;
   line-height: 1.6;
 }
+.map-notice {
+  margin: 0;
+  padding: 12px 20px;
+  border-top: 1px solid #e3e8dc;
+  background: #faf4e8;
+  color: #715a36;
+  font-size: 12px;
+  line-height: 1.5;
+}
 .map-toolbar {
   position: absolute;
   bottom: 13px;
@@ -2330,8 +2339,8 @@ tbody tr {
               </div>
               <div class="map-toolbar">
                 <label
-                  ><input id="street-map" type="checkbox" /> Street
-                  basemap</label
+                  ><input id="street-map" type="checkbox" checked />
+                  OpenStreetMap</label
                 >
               </div>
               <div class="map-coordinate" id="map-coordinate">
@@ -2344,6 +2353,7 @@ tbody tr {
               ><span><i class="legend-point"></i>Point</span
               ><span class="legend-hint">Click a feature to inspect</span>
             </div>
+            <p id="map-status" class="map-notice" role="status" hidden></p>
           </article>
           <article class="panel detail-panel">
             <div class="panel-heading">
@@ -2910,11 +2920,12 @@ let tileErrorShown = false;
 street.on("tileerror", () => {
   if (!tileErrorShown) {
     tileErrorShown = true;
-    feedback(
-      "The street basemap is unavailable. Your feature outlines still work without it.",
-    );
+    $("map-status").textContent =
+      "OpenStreetMap tiles could not load. Your feature outlines still work. Check your connection or turn off the basemap.";
+    $("map-status").hidden = false;
   }
 });
+if ($("street-map").checked) street.addTo(map);
 let featureGroup = L.featureGroup().addTo(map);
 function layerStyle(feature, selected = false) {
   const color = selected
@@ -3089,6 +3100,7 @@ $("next-page").addEventListener("click", () => {
 });
 $("fit-map").addEventListener("click", fitMap);
 $("street-map").addEventListener("change", (event) => {
+  $("map-status").hidden = true;
   if (event.target.checked) {
     tileErrorShown = false;
     street.addTo(map);

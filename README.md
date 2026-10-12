@@ -8,6 +8,8 @@ Area and length measurements for KML files and Shapefiles, with a map to inspect
 
 Upload a file or try the included sample. The app shows each feature's geometry, attributes, source CRS, and measurement. Select a feature on the map or in the table, filter the results, and download them as JSON.
 
+OpenStreetMap provides streets and place names beneath your features by default. You can turn it off to view the outlines alone; basemap tiles need an internet connection.
+
 Built with Python, FastAPI, PyShp, Shapely, pyproj, and Leaflet. The frontend is plain HTML, CSS, and JavaScript.
 
 ## Run locally

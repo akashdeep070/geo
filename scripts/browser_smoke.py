@@ -171,6 +171,9 @@ def run_checks(url, directory):
         page.goto(url, wait_until="networkidle")
         expect(page.locator("h1")).to_have_text("Your data, in perspective.")
         expect(page.locator("#map-empty")).to_be_visible()
+        expect(page.locator("#street-map")).to_be_checked()
+        assert page.evaluate("map.hasLayer(street)")
+        expect(page.locator(".leaflet-control-attribution")).to_contain_text("OpenStreetMap")
         limit = 3 if os.getenv("VERCEL") == "1" else 20
         expect(page.locator("#upload-limit")).to_have_text(f"Up to {limit} MiB")
         if limit == 3:
@@ -307,12 +310,15 @@ def run_checks(url, directory):
         center = page.evaluate("({lat: map.getCenter().lat, lng: map.getCenter().lng})")
         assert abs(center["lng"] - 75) < 0.01 and 27 < center["lat"] < 29
 
-        # Optional basemap failure must not break offline feature rendering.
+        # A failed default basemap must not break feature rendering or upload feedback.
+        page.locator("#street-map").uncheck()
         page.route("https://tile.openstreetmap.org/**", lambda route: route.abort())
         page.locator("#street-map").check()
-        expect(page.locator("#feedback")).to_contain_text("street basemap is unavailable")
+        expect(page.locator("#map-status")).to_contain_text("OpenStreetMap tiles could not load")
+        expect(page.locator("#feedback")).to_contain_text("projected.zip is ready")
         expect(page.locator("#map path.leaflet-interactive")).to_have_count(1)
         page.locator("#street-map").uncheck()
+        expect(page.locator("#map-status")).to_be_hidden()
         assert not errors, errors
         if stateless:
             assert not database_requests, database_requests
